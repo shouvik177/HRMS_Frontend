@@ -34,7 +34,7 @@ function apiHeaders(includeAuth = true) {
   return headers;
 }
 
-// --- Auth API (only when BASE_URL is set) ---
+// Auth API 
 
 export async function loginApi(email, password) {
   if (!BASE_URL) throw new Error("Backend not configured.");
@@ -45,7 +45,7 @@ export async function loginApi(email, password) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.detail || "Login failed.");
-  return data; // { token, user }
+  return data; 
 }
 
 export async function registerApi({ name, email, password }) {
@@ -57,7 +57,7 @@ export async function registerApi({ name, email, password }) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.detail || "Signup failed.");
-  return data; // { token, user }
+  return data; 
 }
 
 export async function logoutApi() {
@@ -70,7 +70,7 @@ export async function logoutApi() {
       headers: apiHeaders(),
     });
   } catch {
-    // Still clear local state even if API fails
+   
   }
 }
 

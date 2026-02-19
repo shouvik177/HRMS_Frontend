@@ -29,7 +29,7 @@ function Dashboard() {
   const today = new Date().toISOString().slice(0, 10);
   const presentToday = attendance.filter((a) => a.date === today && a.status === "Present").length;
 
-  // Bonus: present days per employee
+
   const presentByEmployee = employees.map((emp) => {
     const count = attendance.filter(
       (a) => a.employee_id === emp.employee_id && a.status === "Present"

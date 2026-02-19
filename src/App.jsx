@@ -11,7 +11,7 @@ import Signup from "./pages/Signup";
 function AppNav() {
   const { isLoggedIn, logout, authNotRequired } = useAuth();
 
-  // Single admin, no auth required: after logout show Log in / Sign up; when logged in show main app nav
+ 
   if (authNotRequired) {
     if (!isLoggedIn) {
       return (
@@ -77,7 +77,7 @@ function AppNav() {
 function AppRoutes() {
   const { isLoggedIn, authNotRequired } = useAuth();
 
-  // Single admin, no auth: include login/signup so logout can send user there
+
   if (authNotRequired) {
     return (
       <Routes>
