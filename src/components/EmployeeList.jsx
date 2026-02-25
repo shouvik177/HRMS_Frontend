@@ -26,7 +26,7 @@ function EmployeeList({ refreshKey = 0 }) {
   }, [refreshKey]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this employee?")) return;
+    if (!window.confirm("Delete this employee? This will also remove their attendance records.")) return;
     try {
       await deleteEmployee(id);
       setEmployees((prev) => prev.filter((e) => e.id !== id));
@@ -41,8 +41,24 @@ function EmployeeList({ refreshKey = 0 }) {
     load();
   };
 
-  if (loading) return <div className="card"><div className="loading">Loading employees…</div></div>;
-  if (error) return <div className="card"><div className="error-msg">{error}</div><button className="btn btn-ghost" onClick={load}>Retry</button></div>;
+  if (loading) {
+    return (
+      <div className="card">
+        <div className="loading">Loading employees…</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="card">
+        <div className="error-msg">{error}</div>
+        <button type="button" className="btn btn-ghost" onClick={load}>
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   if (employees.length === 0) {
     return (

@@ -5,8 +5,6 @@ import { logoutApi } from "../services/api";
 const AUTH_KEY = "hrms_auth";
 const TOKEN_KEY = "hrms_token";
 
-// By default, login is required — new users cannot see Dashboard/Employees/Attendance until they sign up or log in.
-// Set VITE_SKIP_AUTH=true in .env only if you want to allow access without login (e.g. single-admin dev mode).
 const AUTH_NOT_REQUIRED = import.meta.env.VITE_SKIP_AUTH === "true";
 
 export const AuthContext = createContext(null);

@@ -8,7 +8,14 @@ const STORAGE_KEYS = {
 
 const BASE_URL = import.meta.env.VITE_API_URL || "";
 
-/** Get first error message from Django/DRF response (detail or field errors). */
+const AUTH_REQUEST_TIMEOUT_MS = 90000;
+
+function fetchWithTimeout(url, options = {}, timeoutMs = AUTH_REQUEST_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
+}
+
 function getErrorMessage(data) {
   if (!data) return "Request failed.";
   if (data.detail) return typeof data.detail === "string" ? data.detail : data.detail[0] || "Error.";
@@ -19,12 +26,10 @@ function getErrorMessage(data) {
   return "Error.";
 }
 
-/** Get stored auth token (if any). Used for API requests when backend is used. */
 export function getAuthToken() {
   return localStorage.getItem(STORAGE_KEYS.authToken);
 }
 
-/** Build headers for API requests. Adds Content-Type and Authorization if token exists. */
 function apiHeaders(includeAuth = true) {
   const headers = { "Content-Type": "application/json" };
   if (includeAuth && BASE_URL) {
@@ -34,30 +39,38 @@ function apiHeaders(includeAuth = true) {
   return headers;
 }
 
-// Auth API 
-
 export async function loginApi(email, password) {
   if (!BASE_URL) throw new Error("Backend not configured.");
-  const res = await fetch(`${BASE_URL}/api/auth/login/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.detail || "Login failed.");
-  return data; 
+  try {
+    const res = await fetchWithTimeout(`${BASE_URL}/api/auth/login/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || "Login failed.");
+    return data;
+  } catch (err) {
+    if (err.name === "AbortError") throw new Error("Request timed out. The server may be waking up—please try again.");
+    throw new Error(err.message || "Login failed. Check your connection and try again.");
+  }
 }
 
 export async function registerApi({ name, email, password }) {
   if (!BASE_URL) throw new Error("Backend not configured.");
-  const res = await fetch(`${BASE_URL}/api/auth/register/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email, password }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.detail || "Signup failed.");
-  return data; 
+  try {
+    const res = await fetchWithTimeout(`${BASE_URL}/api/auth/register/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || "Signup failed.");
+    return data;
+  } catch (err) {
+    if (err.name === "AbortError") throw new Error("Request timed out. The server may be waking up—please try again.");
+    throw new Error(err.message || "Signup failed. Check your connection and try again.");
+  }
 }
 
 export async function logoutApi() {
@@ -86,8 +99,6 @@ function getFromStorage(key, defaultVal = []) {
 function setStorage(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
-
-// Employees 
 
 export async function getEmployees() {
   if (BASE_URL) {
@@ -167,8 +178,6 @@ export async function deleteEmployee(id) {
   setStorage(STORAGE_KEYS.employees, list);
   return Promise.resolve();
 }
-
-// Attendance 
 
 export async function getAttendance(params = {}) {
   if (BASE_URL) {

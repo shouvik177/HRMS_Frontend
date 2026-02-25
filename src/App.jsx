@@ -1,30 +1,17 @@
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { useAuth } from "./context/useAuth";
-import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Employees from "./pages/Employees";
 import Attendance from "./pages/Attendance";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function AppNav() {
   const { isLoggedIn, logout, authNotRequired } = useAuth();
 
- 
   if (authNotRequired) {
-    if (!isLoggedIn) {
-      return (
-        <nav className="app-nav">
-          <NavLink to="/login" className={({ isActive }) => (isActive ? "active" : "")}>
-            Log in
-          </NavLink>
-          <NavLink to="/signup" className={({ isActive }) => (isActive ? "active" : "")}>
-            Sign up
-          </NavLink>
-        </nav>
-      );
-    }
     return (
       <nav className="app-nav">
         <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
@@ -36,9 +23,6 @@ function AppNav() {
         <NavLink to="/attendance" className={({ isActive }) => (isActive ? "active" : "")}>
           Attendance
         </NavLink>
-        <button type="button" className="btn btn-ghost" onClick={logout}>
-          Log out
-        </button>
       </nav>
     );
   }
@@ -77,12 +61,9 @@ function AppNav() {
 function AppRoutes() {
   const { isLoggedIn, authNotRequired } = useAuth();
 
-
   if (authNotRequired) {
     return (
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
         <Route path="/" element={<Dashboard />} />
         <Route path="/employees" element={<Employees />} />
         <Route path="/attendance" element={<Attendance />} />
@@ -95,30 +76,9 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={isLoggedIn ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/signup" element={isLoggedIn ? <Navigate to="/" replace /> : <Signup />} />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/employees"
-        element={
-          <ProtectedRoute>
-            <Employees />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/attendance"
-        element={
-          <ProtectedRoute>
-            <Attendance />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
+      <Route path="/attendance" element={<ProtectedRoute><Attendance /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
     </Routes>
   );
@@ -130,10 +90,10 @@ function App() {
       <AuthProvider>
         <div className="app-container">
           <header className="app-header">
-            <h1 className="app-title">HRMS</h1>
+            <h1 className="app-title">HRMS Lite</h1>
             <AppNav />
           </header>
-          <main>
+          <main className="app-main">
             <AppRoutes />
           </main>
         </div>

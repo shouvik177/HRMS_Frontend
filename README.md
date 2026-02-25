@@ -57,6 +57,8 @@ npm run preview
    ```
 2. Restart the dev server. The app will call your API instead of using localStorage.
 
+**Production (deployed backend):** Set `VITE_API_URL=https://hrms-backend-8v9r.onrender.com` in your host’s environment (e.g. Vercel → Settings → Environment Variables) so the deployed frontend uses the live API.
+
 Expected API shape:
 
 - **GET** `/api/employees` → list of `{ id, employee_id, full_name, email, department }`

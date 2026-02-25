@@ -7,8 +7,7 @@ function AttendanceList({ refreshKey = 0, filterDate = "", filterEmployeeId = ""
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const load = () => {
     setLoading(true);
     setError(null);
     const params = {};
@@ -16,17 +15,15 @@ function AttendanceList({ refreshKey = 0, filterDate = "", filterEmployeeId = ""
     if (filterEmployeeId) params.employee_id = filterEmployeeId;
     Promise.all([getAttendance(params), getEmployees()])
       .then(([attList, empList]) => {
-        if (cancelled) return;
         setRecords(Array.isArray(attList) ? attList : []);
         setEmployees(Array.isArray(empList) ? empList : []);
       })
-      .catch((err) => {
-        if (!cancelled) setError(err.message || "Failed to load attendance.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
+      .catch((err) => setError(err.message || "Failed to load attendance."))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
   }, [refreshKey, filterDate, filterEmployeeId]);
 
   const getName = (employeeId) => {
@@ -35,7 +32,16 @@ function AttendanceList({ refreshKey = 0, filterDate = "", filterEmployeeId = ""
   };
 
   if (loading) return <div className="card"><div className="loading">Loading attendance…</div></div>;
-  if (error) return <div className="card"><div className="error-msg">{error}</div></div>;
+  if (error) {
+    return (
+      <div className="card">
+        <div className="error-msg">{error}</div>
+        <button type="button" className="btn btn-ghost" onClick={load}>
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   if (records.length === 0) {
     let emptyMsg = "No attendance records yet. Mark attendance using the form above.";
@@ -99,7 +105,11 @@ function AttendanceList({ refreshKey = 0, filterDate = "", filterEmployeeId = ""
               <tr key={r.id}>
                 <td>{r.date}</td>
                 <td>{getName(r.employee_id)}</td>
-                <td>{r.status}</td>
+                <td>
+                <span className={r.status === "Present" ? "status-present" : "status-absent"}>
+                  {r.status}
+                </span>
+              </td>
               </tr>
             ))}
           </tbody>

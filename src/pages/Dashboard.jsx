@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getEmployees, getAttendance } from "../services/api";
 
 function Dashboard() {
@@ -7,23 +7,21 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const load = useCallback(() => {
     setLoading(true);
+    setError(null);
     Promise.all([getEmployees(), getAttendance()])
       .then(([empList, attList]) => {
-        if (cancelled) return;
         setEmployees(Array.isArray(empList) ? empList : []);
         setAttendance(Array.isArray(attList) ? attList : []);
       })
-      .catch((err) => {
-        if (!cancelled) setError(err.message || "Failed to load data.");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
+      .catch((err) => setError(err.message || "Failed to load data."))
+      .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const presentCount = attendance.filter((a) => a.status === "Present").length;
   const today = new Date().toISOString().slice(0, 10);
@@ -37,8 +35,24 @@ function Dashboard() {
     return { ...emp, presentDays: count };
   }).sort((a, b) => b.presentDays - a.presentDays);
 
-  if (loading) return <div className="card"><div className="loading">Loading dashboard…</div></div>;
-  if (error) return <div className="card"><div className="error-msg">{error}</div></div>;
+  if (loading) {
+    return (
+      <div className="card">
+        <div className="loading">Loading dashboard…</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="card">
+        <div className="error-msg">{error}</div>
+        <button type="button" className="btn btn-ghost" onClick={load}>
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -86,7 +100,7 @@ function Dashboard() {
       )}
       <div className="card">
         <h3 className="page-title" style={{ marginTop: 0 }}>Quick summary</h3>
-        <p style={{ color: "var(--color-text-muted)", margin: 0 }}>
+        <p className="quick-summary">
           Use <strong>Employees</strong> to add or remove staff. Use <strong>Attendance</strong> to mark daily Present/Absent and view or filter records.
         </p>
       </div>
