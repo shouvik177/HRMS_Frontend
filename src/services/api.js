@@ -16,14 +16,17 @@ function fetchWithTimeout(url, options = {}, timeoutMs = AUTH_REQUEST_TIMEOUT_MS
   return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(id));
 }
 
-function getErrorMessage(data) {
-  if (!data) return "Request failed.";
-  if (data.detail) return typeof data.detail === "string" ? data.detail : data.detail[0] || "Error.";
+function getErrorMessage(data, fallback) {
+  if (!data) return fallback || "Request failed.";
+  if (data.detail) return typeof data.detail === "string" ? data.detail : (Array.isArray(data.detail) ? data.detail[0] : null) || fallback || "Request failed.";
   if (typeof data === "object") {
-    const first = Object.values(data).flat()[0];
-    return first || "Error.";
+    const values = Object.values(data).flat();
+    const first = values.find((v) => typeof v === "string");
+    if (first) return first;
+    const arrFirst = values.find((v) => Array.isArray(v) && v[0]);
+    if (arrFirst && arrFirst[0]) return arrFirst[0];
   }
-  return "Error.";
+  return fallback || "Something went wrong. Check the backend and try again.";
 }
 
 export function getAuthToken() {
@@ -110,7 +113,7 @@ export async function getEmployees() {
       throw new Error(err.message || "Failed to fetch employees. Check your connection and backend URL.");
     }
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(getErrorMessage(data) || `Failed to fetch employees (${res.status})`);
+    if (!res.ok) throw new Error(getErrorMessage(data, `Failed to fetch employees (${res.status}). Check backend URL.`));
     return data;
   }
   const list = getFromStorage(STORAGE_KEYS.employees);
@@ -199,7 +202,7 @@ export async function getAttendance(params = {}) {
     }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      const msg = data.detail || getErrorMessage(data) || `Failed to fetch attendance (${res.status})`;
+      const msg = (typeof data.detail === "string" ? data.detail : null) || getErrorMessage(data, `Failed to fetch attendance (${res.status}). Check backend URL.`);
       throw new Error(msg);
     }
     return data;

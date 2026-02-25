@@ -23,6 +23,9 @@ function AppNav() {
         <NavLink to="/attendance" className={({ isActive }) => (isActive ? "active" : "")}>
           Attendance
         </NavLink>
+        <button type="button" className="btn btn-ghost" onClick={logout}>
+          Log out
+        </button>
       </nav>
     );
   }
