@@ -6,7 +6,7 @@ const STORAGE_KEYS = {
   authToken: "hrms_token",
 };
 
-const BASE_URL = import.meta.env.VITE_API_URL || "";
+const BASE_URL = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
 const AUTH_REQUEST_TIMEOUT_MS = 90000;
 
@@ -102,9 +102,16 @@ function setStorage(key, value) {
 
 export async function getEmployees() {
   if (BASE_URL) {
-    const res = await fetch(`${BASE_URL}/api/employees/`, { headers: apiHeaders() });
-    if (!res.ok) throw new Error(res.statusText || "Failed to fetch employees");
-    return res.json();
+    let res;
+    try {
+      res = await fetchWithTimeout(`${BASE_URL}/api/employees/`, { headers: apiHeaders() }, 30000);
+    } catch (err) {
+      if (err.name === "AbortError") throw new Error("Request timed out. The server may be starting—try again.");
+      throw new Error(err.message || "Failed to fetch employees. Check your connection and backend URL.");
+    }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(getErrorMessage(data) || `Failed to fetch employees (${res.status})`);
+    return data;
   }
   const list = getFromStorage(STORAGE_KEYS.employees);
   return Promise.resolve(list);
@@ -183,9 +190,19 @@ export async function getAttendance(params = {}) {
   if (BASE_URL) {
     const qs = new URLSearchParams(params).toString();
     const url = `${BASE_URL}/api/attendance/${qs ? "?" + qs : ""}`;
-    const res = await fetch(url, { headers: apiHeaders() });
-    if (!res.ok) throw new Error("Failed to fetch attendance");
-    return res.json();
+    let res;
+    try {
+      res = await fetchWithTimeout(url, { headers: apiHeaders() }, 30000);
+    } catch (err) {
+      if (err.name === "AbortError") throw new Error("Request timed out. The server may be starting—try again.");
+      throw new Error(err.message || "Failed to fetch attendance. Check your connection and backend URL.");
+    }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = data.detail || getErrorMessage(data) || `Failed to fetch attendance (${res.status})`;
+      throw new Error(msg);
+    }
+    return data;
   }
   const list = getFromStorage(STORAGE_KEYS.attendance);
   let result = list;
