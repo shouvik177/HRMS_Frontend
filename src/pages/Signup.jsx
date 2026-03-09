@@ -37,7 +37,13 @@ function Signup() {
       localStorage.setItem("hrms_user", JSON.stringify(response.data.user));
       navigate("/dashboard");
     } catch (apiError) {
-      setError(apiError.response?.data?.detail || "Signup failed.");
+      if (apiError.code === "ECONNABORTED") {
+        setError("Server is waking up. Please wait a few seconds and try again.");
+      } else if (!apiError.response) {
+        setError("Cannot reach server. Check backend URL/environment variable.");
+      } else {
+        setError(apiError.response?.data?.detail || "Signup failed.");
+      }
     } finally {
       setIsSubmitting(false);
     }

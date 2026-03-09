@@ -5,7 +5,8 @@ const API_BASE_URL =
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  // Render free instances can cold-start and take longer than 10s.
+  timeout: 30000,
 });
 
 export const employeeApi = {
