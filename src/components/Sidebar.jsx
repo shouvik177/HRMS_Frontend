@@ -11,7 +11,7 @@ function Sidebar() {
     <aside className="w-64 border-r border-border-dark bg-secondary-bg px-4 py-6">
       <div className="mb-10 px-2">
         <h1 className="text-xl font-semibold tracking-tight text-text-primary">
-          HRMS Lite
+          HRMS
         </h1>
         <p className="mt-1 text-xs text-text-secondary">
           Human Resource Dashboard
