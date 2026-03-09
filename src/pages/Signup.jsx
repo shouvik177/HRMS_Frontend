@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authApi } from "../services/api";
 
-function Signup() {
+function Signup({ onAuthSuccess }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     full_name: "",
@@ -34,7 +34,7 @@ function Signup() {
         email: formData.email,
         password: formData.password,
       });
-      localStorage.setItem("hrms_user", JSON.stringify(response.data.user));
+      onAuthSuccess(response.data.user);
       navigate("/dashboard");
     } catch (apiError) {
       if (apiError.code === "ECONNABORTED") {

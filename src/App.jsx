@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -9,13 +10,27 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
 function App() {
-  const isAuthenticated = Boolean(localStorage.getItem("hrms_user"));
+  const [currentUser, setCurrentUser] = useState(() => {
+    const raw = localStorage.getItem("hrms_user");
+    return raw ? JSON.parse(raw) : null;
+  });
+  const isAuthenticated = Boolean(currentUser);
+
+  const handleAuthSuccess = (user) => {
+    localStorage.setItem("hrms_user", JSON.stringify(user));
+    setCurrentUser(user);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("hrms_user");
+    setCurrentUser(null);
+  };
 
   if (!isAuthenticated) {
     return (
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login onAuthSuccess={handleAuthSuccess} />} />
+        <Route path="/signup" element={<Signup onAuthSuccess={handleAuthSuccess} />} />
         <Route path="*" element={<Navigate replace to="/login" />} />
       </Routes>
     );
@@ -25,7 +40,7 @@ function App() {
     <div className="flex min-h-screen bg-primary-bg text-text-primary">
       <Sidebar />
       <div className="flex min-h-screen flex-1 flex-col">
-        <Header />
+        <Header user={currentUser} onLogout={handleLogout} />
         <main className="flex-1 px-6 py-6">
           <Routes>
             <Route path="/" element={<Navigate replace to="/dashboard" />} />

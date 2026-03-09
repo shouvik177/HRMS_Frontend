@@ -6,15 +6,9 @@ const pageTitles = {
   "/attendance": "Attendance Management",
 };
 
-function Header() {
+function Header({ user, onLogout }) {
   const location = useLocation();
   const title = pageTitles[location.pathname] || "HRMS Lite";
-  const user = JSON.parse(localStorage.getItem("hrms_user") || "null");
-
-  const handleLogout = () => {
-    localStorage.removeItem("hrms_user");
-    window.location.href = "/login";
-  };
 
   return (
     <header className="flex items-center justify-between border-b border-border-dark bg-secondary-bg px-6 py-4">
@@ -29,7 +23,7 @@ function Header() {
           <span className="text-sm text-text-secondary">{user.full_name}</span>
           <button
             type="button"
-            onClick={handleLogout}
+            onClick={onLogout}
             className="rounded-lg border border-border-dark bg-card-bg px-3 py-1.5 text-xs font-medium text-text-primary transition hover:bg-accent-grey"
           >
             Logout
